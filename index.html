@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="Crema hero spec v1">
+<!-- Built from crema-hero-spec.md (hero-section-clone-prompt-template) -->
+<title>Crema — Order ahead, skip the queue</title>
+<meta name="description" content="Order coffee ahead from your favourite counter. Your espresso is pulled when you're close, so it's waiting the moment you walk in.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script>
+// Runs before first paint: apply saved settings (theme, text size, motion, video)
+// so the page never flashes the wrong theme.
+try {
+  const s = JSON.parse(localStorage.getItem("crema-settings") || "{}");
+  const r = document.documentElement;
+  if (s.theme === "light") r.dataset.theme = "light";
+  if (s.textSize === "large") r.classList.add("text-large");
+  if (s.reduceMotion) r.classList.add("reduce-motion");
+  if (s.video === false) r.classList.add("no-video");
+} catch (e) { /* private mode or a corrupt value: keep the defaults */ }
+// A page transition is skipped when the tab is hidden or the window resizes mid-navigation.
+// That is expected, so claim its promises on both the outgoing page (pageswap) and the
+// incoming one (pagereveal, before first render) so it is never an uncaught error.
+const claimTransition = (e) => {
+  const t = e.viewTransition;
+  if (t) [t.ready, t.finished, t.updateCallbackDone].forEach((p) => p && p.catch(() => {}));
+};
+addEventListener("pageswap", claimTransition);
+addEventListener("pagereveal", claimTransition);
+</script>
+</head>
+<body>
+
+<!-- Fixed background: stays still while the page scrolls over it -->
+<div class="page-bg" aria-hidden="true">
+  <video id="heroVideo" autoplay muted loop playsinline preload="auto" poster="poster.jpg">
+    <source src="espresso-combined.mp4" type="video/mp4">
+  </video>
+  <div class="hero-shade"></div>
+  <div class="hero-grain"></div>
+</div>
+
+<aside class="sidebar" id="sidebar" aria-label="Site navigation">
+  <div class="sidebar-head">
+    <a class="nav-brand" href="index.html" aria-label="Crema home">Crema<span class="nav-dot" aria-hidden="true"></span></a>
+    <button class="icon-btn sidebar-close" id="sidebarClose" type="button" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <nav aria-label="Primary">
+    <ul class="side-links">
+      <li><a href="index.html" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5"/><path d="M6.5 10v9h11v-9"/></svg>Home</a></li>
+      <li><a href="menu.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h11v4.5a5.5 5.5 0 0 1-11 0z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8.5 3.5v2M12 3.5v2"/></svg>Menu</a></li>
+      <li><a href="beans.html"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="6" ry="8.5" transform="rotate(35 12 12)"/><path d="M8.2 16.6c2.6-1.6.6-5 3.6-7s2-3.4 4-4.4"/></svg>Beans</a></li>
+      <li><a href="rewards.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 4 2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z"/></svg>Rewards</a></li>
+      <li><a href="locations.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>Locations</a></li>
+    </ul>
+  </nav>
+  <div class="sidebar-foot">
+    <button class="side-settings" id="settingsToggle" type="button" aria-expanded="false" aria-controls="settingsPanel">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 3.6v2.2M12 18.2v2.2M20.4 12h-2.2M5.8 12H3.6M17.9 6.1l-1.6 1.6M7.7 16.3l-1.6 1.6M17.9 17.9l-1.6-1.6M7.7 7.7 6.1 6.1"/></svg>Settings
+    </button>
+    <a class="btn btn-primary" href="#top">Get the app</a>
+  </div>
+</aside>
+<div class="sidebar-scrim" id="sidebarScrim" hidden></div>
+<div class="settings-panel" id="settingsPanel" role="dialog" aria-labelledby="settingsTitle" hidden>
+  <div class="settings-head">
+    <h2 id="settingsTitle">Settings</h2>
+    <button class="icon-btn" id="settingsClose" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <ul class="settings-list">
+    <li>
+      <div>
+        <p class="settings-name">Theme</p>
+        <p class="settings-hint">Dark espresso or light cream.</p>
+      </div>
+      <div class="seg" id="setTheme" role="group" aria-label="Theme">
+        <button type="button" data-theme-choice="dark" aria-pressed="true">Dark</button>
+        <button type="button" data-theme-choice="light" aria-pressed="false">Light</button>
+      </div>
+    </li>
+    <li>
+      <div>
+        <p class="settings-name">Background video</p>
+        <p class="settings-hint">Play the espresso film behind the home page.</p>
+      </div>
+      <button class="switch" id="setVideo" type="button" role="switch" aria-checked="true" aria-label="Background video"><span aria-hidden="true"></span></button>
+    </li>
+    <li>
+      <div>
+        <p class="settings-name">Reduce motion</p>
+        <p class="settings-hint">Turn off fades, page transitions and hover movement.</p>
+      </div>
+      <button class="switch" id="setMotion" type="button" role="switch" aria-checked="false" aria-label="Reduce motion"><span aria-hidden="true"></span></button>
+    </li>
+    <li>
+      <div>
+        <p class="settings-name">Text size</p>
+        <p class="settings-hint">Make everything a step larger.</p>
+      </div>
+      <div class="seg" id="setText" role="group" aria-label="Text size">
+        <button type="button" data-size="normal" aria-pressed="true">Normal</button>
+        <button type="button" data-size="large" aria-pressed="false">Large</button>
+      </div>
+    </li>
+  </ul>
+  <p class="settings-note">Saved on this device only.</p>
+</div>
+
+<div class="page">
+  <header class="topbar is-overlay" id="topbar">
+    <a class="nav-brand topbar-brand" href="index.html" aria-label="Crema home">Crema<span class="nav-dot" aria-hidden="true"></span></a>
+    <ul class="top-links" aria-label="Pages">
+      <li><a href="index.html" aria-current="page"><span class="top-indicator" aria-hidden="true"></span>Home</a></li>
+      <li><a href="menu.html">Menu</a></li>
+      <li><a href="beans.html">Beans</a></li>
+      <li><a href="rewards.html">Rewards</a></li>
+      <li><a href="locations.html">Locations</a></li>
+    </ul>
+    <a class="btn btn-outline topbar-cta" href="#top">Get the app</a>
+    <button class="icon-btn menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="sidebar" aria-label="Open menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+    </button>
+  </header>
+
+  <main>
+    <section class="hero on-media" id="top">
+      <div class="hero-body">
+        <div class="hero-copy">
+          <p class="eyebrow" data-reveal>Order ahead · Skip the queue</p>
+          <h1 class="headline">
+            <span class="line" data-reveal>Your espresso,</span>
+            <span class="line" data-reveal>pulled <em>before</em> you arrive.</span>
+          </h1>
+          <p class="lede" data-reveal>Order from your favourite counter in a few taps. We start the shot when you're close, so it's hot, fresh and waiting on the bar the moment you walk in.</p>
+          <div class="cta-row" data-reveal>
+            <a class="btn btn-primary" href="#top">Download the app</a>
+            <a class="btn btn-ghost" href="menu.html">Browse the menu</a>
+          </div>
+          <dl class="stats" data-reveal>
+            <div><dt>average pickup</dt><dd>2 min</dd></div>
+            <div><dt>always on us</dt><dd>9th cup</dd></div>
+            <div><dt>neighbourhood bars</dt><dd>12</dd></div>
+          </dl>
+        </div>
+
+        <aside class="order-card" data-reveal aria-label="Live order status example">
+          <div class="order-head">
+            <span class="order-id">Order #214</span>
+            <span class="order-pill" id="orderPill">Brewing</span>
+          </div>
+          <p class="order-item">Double espresso · oat</p>
+          <p class="order-meta">Crema Soho · Bar 2</p>
+          <div class="order-timer">
+            <span class="order-time" id="orderTime" aria-live="off">2:00</span>
+            <span class="order-time-label">until ready</span>
+          </div>
+          <div class="order-bar" aria-hidden="true"><span id="orderBar"></span></div>
+          <ol class="order-steps" id="orderSteps">
+            <li class="is-done">Ordered</li>
+            <li>Brewing</li>
+            <li>Ready</li>
+          </ol>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section section-features" id="picks" aria-labelledby="picksTitle">
+      <div class="section-inner" data-reveal-group>
+        <div class="section-head on-media">
+          <div data-reveal>
+            <p class="eyebrow">This week's picks</p>
+            <h2 class="section-title" id="picksTitle">Two things we would <em>order</em> today.</h2>
+          </div>
+        </div>
+
+        <article class="feature" data-reveal>
+          <div class="feature-media">
+            <img src="flat-white.jpg" alt="Espresso pouring into a dark green ceramic cup, crema settling on the surface" width="1200" height="900" loading="lazy">
+          </div>
+          <div class="feature-card">
+            <p class="feature-tag">Recommended drink</p>
+            <h3>Flat white<span class="feature-price">£3.40</span></h3>
+            <p>Our most-ordered cup, and the one we would hand you first. Two ristretto shots of the House Blend keep it sweet and chocolatey, and the milk is steamed thin and glossy so it pours flat — no foam cap, no sugar needed.</p>
+            <dl class="feature-facts">
+              <div><dt>Bean</dt><dd>House Blend</dd></div>
+              <div><dt>Served</dt><dd>6oz, no sugar</dd></div>
+              <div><dt>Milk</dt><dd>Whole, oat or almond</dd></div>
+            </dl>
+            <a class="btn btn-ghost" href="menu.html">See it on the menu</a>
+          </div>
+        </article>
+
+        <article class="feature" data-reveal>
+          <div class="feature-media">
+            <img src="croissant.svg" alt="Illustration of a butter croissant" width="1200" height="900" loading="lazy">
+          </div>
+          <div class="feature-card">
+            <p class="feature-tag">Recommended bake</p>
+            <h3>Butter croissant<span class="feature-price">£2.90</span></h3>
+            <p>Laminated in-house every morning with proper butter, then baked in batches through the day. The outside shatters when you tear it, the inside pulls apart in ribbons, and if you time it right it is still warm from the oven.</p>
+            <dl class="feature-facts">
+              <div><dt>Baked</dt><dd>From 6:30 each morning</dd></div>
+              <div><dt>Goes with</dt><dd>Batch brew or a flat white</dd></div>
+              <div><dt>Tip</dt><dd>Usually still warm before 11</dd></div>
+            </dl>
+            <a class="btn btn-ghost" href="menu.html">See it on the menu</a>
+          </div>
+        </article>
+
+        <div class="section-foot on-media" data-reveal>
+          <p>Prices are the same in the app, and picks change every Monday.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="menu.html">See the full menu</a>
+            <a class="btn btn-ghost" href="beans.html">Meet the beans</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <a class="nav-brand" href="index.html" aria-label="Crema home">Crema<span class="nav-dot" aria-hidden="true"></span></a>
+      <ul class="socials" aria-label="Crema on social media">
+        <li><a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="3.8"/><circle cx="17.2" cy="6.8" r="1.1" class="fill"/></svg></a></li>
+        <li><a href="#" aria-label="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 3.5v11a3.5 3.5 0 1 1-3.5-3.5"/><path d="M13.5 3.5c.5 2.7 2.4 4.6 5 4.9"/></svg></a></li>
+        <li><a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M13.6 21v-7.6h2.6l.4-3h-3V8.5c0-.9.3-1.5 1.5-1.5h1.6V4.3c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.9v3h2.6V21h3.1z"/></svg></a></li>
+        <li><a href="#" aria-label="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 4h4l11 16h-4z"/><path d="M19.5 4l-6.4 7M10.9 13 4.5 20"/></svg></a></li>
+      </ul>
+    </div>
+    <div class="footer-bottom">
+      <p>© <span data-year>2026</span> Crema Coffee. All rights reserved.</p>
+    </div>
+  </footer>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

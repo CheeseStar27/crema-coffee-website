@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="Illustration of a butter croissant">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7ecdd"/>
+      <stop offset="1" stop-color="#e4d0b5"/>
+    </linearGradient>
+    <linearGradient id="crust" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e3ad66"/>
+      <stop offset="0.55" stop-color="#c8883f"/>
+      <stop offset="1" stop-color="#a96a2b"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <ellipse cx="600" cy="672" rx="330" ry="44" fill="#140d08" opacity="0.10"/>
+
+  <g transform="translate(600 470)">
+    <path d="M-312 60 C-320 -120 -170 -236 0 -236 C170 -236 320 -120 312 60 C308 108 252 120 216 86 C150 26 80 -4 0 -4 C-80 -4 -150 26 -216 86 C-252 120 -308 108 -312 60 Z"
+          fill="url(#crust)" stroke="#8d5520" stroke-width="7" stroke-linejoin="round"/>
+
+    <g fill="none" stroke="#8d5520" stroke-width="5" stroke-linecap="round" opacity="0.45">
+      <path d="M-208 40 C-170 -20 -150 -70 -156 -120"/>
+      <path d="M-104 -6 C-84 -74 -74 -130 -82 -178"/>
+      <path d="M0 -14 C0 -90 0 -150 0 -198"/>
+      <path d="M104 -6 C84 -74 74 -130 82 -178"/>
+      <path d="M208 40 C170 -20 150 -70 156 -120"/>
+    </g>
+
+    <g fill="#f0c48a" opacity="0.5">
+      <path d="M-150 -150 C-96 -196 -40 -214 0 -214 C40 -214 96 -196 150 -150 C96 -178 44 -188 0 -188 C-44 -188 -96 -178 -150 -150 Z"/>
+    </g>
+  </g>
+</svg>

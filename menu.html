@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Menu — Crema</title>
+<meta name="description" content="Espresso, milk drinks, slow bar and fresh bakes. Order any of them ahead in the Crema app.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script>
+// Runs before first paint: apply saved settings (theme, text size, motion, video)
+// so the page never flashes the wrong theme.
+try {
+  const s = JSON.parse(localStorage.getItem("crema-settings") || "{}");
+  const r = document.documentElement;
+  if (s.theme === "light") r.dataset.theme = "light";
+  if (s.textSize === "large") r.classList.add("text-large");
+  if (s.reduceMotion) r.classList.add("reduce-motion");
+  if (s.video === false) r.classList.add("no-video");
+} catch (e) { /* private mode or a corrupt value: keep the defaults */ }
+// A page transition is skipped when the tab is hidden or the window resizes mid-navigation.
+// That is expected, so claim its promises on both the outgoing page (pageswap) and the
+// incoming one (pagereveal, before first render) so it is never an uncaught error.
+const claimTransition = (e) => {
+  const t = e.viewTransition;
+  if (t) [t.ready, t.finished, t.updateCallbackDone].forEach((p) => p && p.catch(() => {}));
+};
+addEventListener("pageswap", claimTransition);
+addEventListener("pagereveal", claimTransition);
+</script>
+</head>
+<body class="subpage menu-page">
+
+<aside class="sidebar" id="sidebar" aria-label="Site navigation">
+  <div class="sidebar-head">
+    <a class="nav-brand" href="index.html" aria-label="Crema home">Crema<span class="nav-dot" aria-hidden="true"></span></a>
+    <button class="icon-btn sidebar-close" id="sidebarClose" type="button" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <nav aria-label="Primary">
+    <ul class="side-links">
+      <li><a href="index.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5"/><path d="M6.5 10v9h11v-9"/></svg>Home</a></li>
+      <li><a href="menu.html" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h11v4.5a5.5 5.5 0 0 1-11 0z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8.5 3.5v2M12 3.5v2"/></svg>Menu</a></li>
+      <li><a href="beans.html"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="6" ry="8.5" transform="rotate(35 12 12)"/><path d="M8.2 16.6c2.6-1.6.6-5 3.6-7s2-3.4 4-4.4"/></svg>Beans</a></li>
+      <li><a href="rewards.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 4 2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z"/></svg>Rewards</a></li>
+      <li><a href="locations.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>Locations</a></li>
+    </ul>
+  </nav>
+  <div class="sidebar-foot">
+    <button class="side-settings" id="settingsToggle" type="button" aria-expanded="false" aria-controls="settingsPanel">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 3.6v2.2M12 18.2v2.2M20.4 12h-2.2M5.8 12H3.6M17.9 6.1l-1.6 1.6M7.7 16.3l-1.6 1.6M17.9 17.9l-1.6-1.6M7.7 7.7 6.1 6.1"/></svg>Settings
+    </button>
+    <a class="btn btn-primary" href="index.html">Get the app</a>
+  </div>
+</aside>
+<div class="sidebar-scrim" id="sidebarScrim" hidden></div>
+<div class="settings-panel" id="settingsPanel" role="dialog" aria-labelledby="settingsTitle" hidden>
+  <div class="settings-head">
+    <h2 id="settingsTitle">Settings</h2>
+    <button class="icon-btn" id="settingsClose" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <ul class="settings-list">
+    <li>
+      <div>
+        <p class="settings-name">Theme</p>
+        <p class="settings-hint">Dark espresso or light cream.</p>
+      </div>
+      <div class="seg" id="setTheme" role="group" aria-label="Theme">
+        <button type="button" data-theme-choice="dark" aria-pressed="true">Dark</button>
+        <button type="button" data-theme-choice="light" aria-pressed="false">Light</button>
+      </div>
+    </li>
+    <li>
+      <div>
+        <p class="settings-name">Background video</p>
+        <p class="settings-hint">Play the espresso film behind the home page.</p>
+      </div>
+      <button class="switch" id="setVideo" type="button" role="switch" aria-checked="true" aria-label="Background video"><span aria-hidden="true"></span></button>
+    </li>
+    <li>
+      <div>
+        <p class="settings-name">Reduce motion</p>
+        <p class="settings-hint">Turn off fades, page transitions and hover movement.</p>
+      </div>
+      <button class="switch" id="setMotion" type="button" role="switch" aria-checked="false" aria-label="Reduce motion"><span aria-hidden="true"></span></button>
+    </li>
+    <li>
+      <div>
+        <p class="settings-name">Text size</p>
+        <p class="settings-hint">Make everything a step larger.</p>
+      </div>
+      <div class="seg" id="setText" role="group" aria-label="Text size">
+        <button type="button" data-size="normal" aria-pressed="true">Normal</button>
+        <button type="button" data-size="large" aria-pressed="false">Large</button>
+      </div>
+    </li>
+  </ul>
+  <p class="settings-note">Saved on this device only.</p>
+</div>
+
+<div class="page">
+  <header class="topbar" id="topbar">
+    <a class="nav-brand topbar-brand" href="index.html" aria-label="Crema home">Crema<span class="nav-dot" aria-hidden="true"></span></a>
+    <ul class="top-links" aria-label="Pages">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="menu.html" aria-current="page"><span class="top-indicator" aria-hidden="true"></span>Menu</a></li>
+      <li><a href="beans.html">Beans</a></li>
+      <li><a href="rewards.html">Rewards</a></li>
+      <li><a href="locations.html">Locations</a></li>
+    </ul>
+    <a class="btn btn-outline topbar-cta" href="index.html">Get the app</a>
+    <button class="icon-btn menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="sidebar" aria-label="Open menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+    </button>
+  </header>
+
+<main>
+  <section class="section section-light" aria-labelledby="menuTitle">
+    <div class="section-inner" data-reveal-group>
+      <div class="section-head">
+        <div data-reveal>
+          <p class="eyebrow">Menu</p>
+          <h1 class="section-title" id="menuTitle">Pulled, poured, <em>baked</em> fresh.</h1>
+          <p class="section-lede">Everything on the bar, ready to order ahead. Add what you would like, choose your milk at no extra charge, and collect it from the bar you like.</p>
+        </div>
+        <div class="tabs" role="tablist" aria-label="Menu categories" id="menuTabs" data-reveal>
+          <button class="tab" type="button" role="tab" aria-selected="true" aria-controls="menuList" data-category="espresso">Espresso</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="menuList" data-category="milk" tabindex="-1">With milk</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="menuList" data-category="slow" tabindex="-1">Slow bar</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="menuList" data-category="bakes" tabindex="-1">Bakes</button>
+        </div>
+      </div>
+
+      <ul class="menu-list" id="menuList" role="tabpanel" data-reveal>
+        <li class="menu-item" data-category="espresso" data-id="espresso" data-name="Espresso" data-price="260">
+          <div class="menu-top">
+            <span class="menu-art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 10h10v3.5a5 5 0 0 1-10 0z"/><path d="M16 11.5h1.2a2 2 0 0 1 0 4H16"/><path d="M4.5 20h13"/></svg></span>
+            <div>
+              <p class="menu-origin">Espresso</p>
+              <h2>Espresso</h2>
+            </div>
+          </div>
+          <p class="menu-desc">A double shot of the house blend. Dark chocolate, cherry, long sweet finish.</p>
+          <ul class="menu-notes" aria-label="Notes"><li>Dark chocolate</li><li>Cherry</li></ul>
+          <dl class="menu-facts">
+            <div><dt>Price</dt><dd class="menu-price">£2.60</dd></div>
+            <div><dt>Bean</dt><dd>House Blend</dd></div>
+          </dl>
+          <div class="menu-actions">
+            <button class="add-btn" type="button" aria-label="Add Espresso to your order"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add</button>
+          </div>
+        </li>
+        <li class="menu-item" data-category="espresso" data-id="macchiato" data-name="Macchiato" data-price="290">
+          <div class="menu-top">
+            <span class="menu-art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 10h10v3.5a5 5 0 0 1-10 0z"/><path d="M16 11.5h1.2a2 2 0 0 1 0 4H16"/><path d="M4.5 20h13"/></svg></span>
+            <div>
+              <p class="menu-origin">Espresso</p>
+              <h2>Macchiato</h2>
+            </div>
+          </div>
+          <p class="menu-desc">Espresso marked with a spoon of silky microfoam.</p>
+          <ul class="menu-notes" aria-label="Notes"><li>Dark chocolate</li><li>Cherry</li></ul>
+          <dl class="menu-facts">
+            <div><dt>Price</dt><dd class="menu-price">£2.90</dd></div>
+            <div><dt>Bean</dt><dd>House Blend</dd></div>
+          </dl>
+          <div class="menu-actions">
+            <label class="select"><span class="visually-hidden">Milk for Macchiato</span><select data-milk><option>Whole milk</option><option>Oat milk</option><option>Almond milk</option></select></label>
+            <button class="add-btn" type="button" aria-label="Add Macchiato to your order"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add</button>
+          </div>
+        </li>
+        <li class="menu-item" data-category="espresso" data-id="cortado" data-name="Cortado" data-price="320">
+          <div class="menu-top">
+            <span class="menu-art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 10h10v3.5a5 5 0 0 1-10 0z"/><path d="M16 11.5h1.2a2 2 0 0 1 0 4H16"/><path d="M4.5 20h13"/></svg></span>
+            <div>
+              <p class="menu-origin">Espresso</p>
+              <h2>Cortado</h2>
+            </div>
+          </div>
+          <p class="menu-desc">Equal parts espresso and warm milk, served in a small glass.</p>
+          <ul class="menu-notes" aria-label="Notes"><li>Dark chocolate</li><li>Cherry</li></ul>
+          <dl class="menu-facts">
+            <div><dt>Price</dt><dd class="menu-price">£3.20</dd></div>
+            <div><dt>Bean</dt><dd>House Blend</dd></div>
+          </dl>
+          <div class="menu-actions">
+            <label class="select"><span class="visually-hidden">Milk for Cortado</span><select data-milk><option>Whole milk</option><option>Oat milk</option><option>Almond milk</option></select></label>
+            <button class="add-btn" type="button" aria-label="Add Cortado to your order"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add</button>
+          </div>
+        </li>
+        <li class="menu-item" data-category="espresso" data-id="americano" data-name="Americano" data-price="300">
+          <div class="menu-top">
+            <span class="menu-art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 10h10v3.5a5 5 0 0 1-10 0z"/><path d="M16 11.5h1.2a2 2 0 0 1 0 4H16"/><path d="M4.5 20h13"/></svg></span>
+            <div>
+              <p class="menu-origin">Espresso</p>
+              <h2>Americano</h2>
+            </div>
+          </div>
+          <p class="menu-desc">Two shots over hot water. Long, clean and easy to drink.</p>
+          <ul class="menu-notes" aria-label="Notes"><li>Dark chocolate</li><li>Cherry</li></ul>
+          <dl class="menu-facts">
+            <div><dt>Price</dt><dd class="menu-price">£3.00</dd></div>
+            <div><dt>Bean</dt><dd>House Blend</dd></div>
+          </dl>
+          <div class="menu-actions">
+            <button class="add-btn" type="button" aria-label="Add Americano to your order"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add</button>
+          </div>
+        </li>
+
+        <li class="menu-item" data-category="milk" data-id="flat-white" data-name="Flat white" data-price="340">
+          <div class="menu-top">
+            <span class="menu-art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 4h10l-1.2 15.2a1.5 1.5 0 0 1-1.5 1.3H9.7a1.5 1.5 0 0 1-1.5-1.3z"/><path d="M7.6 9.5c1.5 1 3 1 4.4 0s2.9-1 4.4 0"/></svg></span>
+            <div>
+              <p class="menu-origin">With milk</p>
+              <h2>Flat white</h2>
+            </div>
+          </div>
+          <p class="menu-desc">Double ristretto with thin, glossy milk. The one most people order.</p>
+          <ul class="menu-notes" aria-label="Notes"><li>House favourite</li><li>Dark chocolate</li><li>Cherry</li></ul>
+          <dl class="menu-facts">
+            <div><dt>Price</dt><dd class="menu-price">£3.40</dd></div>
+            <div><dt>Bean</dt><dd>House Blend</dd></div>
+          </dl>
+          <div class="menu-actions">
+            <label class="select"><span class="visually-hidden">Milk for Flat white</span><select data-milk><option>Whole milk</option><option>Oat milk</option><option>Almond milk</option></select></label>
+            <button class="add-btn" type="button" aria-label="Add Flat white to your order"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add</button>
+          </div>
+        </li>
+        <li class="menu-item" data-category="milk" data-id="cappuccino" data-name="Cappuccino" data-price="350">
+          <div class="menu-top">
+            <span class="menu-art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 4h10l-1.2 15.2a1.5 1.5 0 0 1-1.5 1.3H9.7a1.5 1.5 0 0 1-1.5-1.3z"/><path d="M7.6 9.5c1.5 1 3 1 4.4 0s2.9-1 4.4 0"/></svg></span>
+            <div>
+              <p class="menu-origin">With milk</p>
+              <h2>Cappuccino</h2>
+            </div>
+          </div>
+          <p class="menu-desc">Espresso under a deep, airy cap of foam. Cocoa on request.</p>
+          <ul class="menu-notes" aria-label="Notes"><li>Dark chocolate</li><li>Cherry</li></ul>
+          <dl class="menu-facts">
+            <div><dt>Price</dt><dd class="menu-price">£3.50</dd></div>
+            <div><dt>Bean</dt><dd>House Blend</dd></div>
+          </dl>
+          <div class="menu-actions">
+            <label class="select"><span class="visually-hidden">Milk for Cappuccino</span><select data-milk><option>Whole milk</option><option>Oat milk</option><option>Almond milk</option></select></label>
+            <button class="add-btn" type="button" aria-label="Add Cappuccino to your order"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add</button>
+          </div>
+        </li>
+        <li class="menu-item" data-category="milk" data-id="oat-latte" data-name="Oat latte" data-price="370">
+          <div class="menu-top">
+            <span class="menu-art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 4h10l-1.2 15.2a1.5 1.5 0 0 1-1.5 1.3H9.7a1.5 1.5 0 0 1-1.5-1.3z"/><path d="M7.6 9.5c1.5 1 3 1 4.4 0s2.9-1 4.4 0"/></svg></span>
+            <div>
+              <p class="menu-origin">With milk</p>
+              <h2>Oat latte</h2>
+            </div>
+          </div>
+          <p class="menu-desc">Our house blend with barista oat milk, steamed smooth.</p>
+          <ul class="menu-notes" aria-label="Notes"><li>Dark chocolate</li><li>Cherry</li></ul>
+          <dl class="menu-facts">
+            <div><dt>Price</dt><dd class="menu-price">£3.70</dd></div>
+            <div><dt>Bean</dt><dd>House Blend</dd></div>
+          </dl>
+          <div class="menu-actions">
+            <button class="add-btn" type="button" aria-label="Add Oat latte to your order"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add</button>
+          </div>
+        </li>
+        <li class="menu-item" data-category="milk" data-id="mocha" data-name="Mocha" data-price="390">
+          <div class="menu-top">
+            <span class="menu-art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 4h10l-1.2 15.2a1.5 1.5 0 0 1-1.5 1.3H9.7a1.5 1.5 0 0 1-1.5-1.3z"/><path d="M7.6 9.5c1.5 1 3 1 4.4 0s2.9-1 4.4 0"/></svg></span>
+            <div>
+              <p class="menu-origin">With milk</p>
+              <h2>Mocha</h2>
+            </div>
+          </div>
+          <p class="menu-desc">Espresso, 70% dark chocolate and steamed milk.</p>
+          <ul class="menu-notes" aria-label="Notes"><li>Dark chocolate</li><li>Cherry</li></ul>
+          <dl class="menu-facts">
+            <div><dt>Price</dt><dd class="menu-price">£3.90</dd></div>
+            <div><dt>Bean</dt><dd>House Blend</dd></div>
+          </dl>
+          <div class="menu-actions">
+            <label class="select"><span class="visually-hidden">Milk for Mocha</span><select data-milk><option>Whole milk</option><option>Oat milk</option><option>Almond milk</option></select></label>
+            <button class="add-btn" type="button" aria-label="Add Mocha to your order"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add</button>
+          </div>
+        </li>
+
+        <li class="menu-item" data-category="slow" data-id="v60" data-name="V60 pour-over" data-price="420">
+          <div class="menu-top">
+            <span class="menu-art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h14l-5 7h-4z"/><path d="M12 12v3"/><path d="M7 16h10v3.5H7z"/></svg></span>
+            <div>
+              <p class="menu-origin">Slow bar</p>
+              <h2>V60 pour-over</h2>
+            </div>
+          </div>
+          <p class="menu-desc">A single origin brewed by hand. The coffee changes every week.</p>
+          <ul class="menu-notes" aria-label="Notes"><li>Jasmine</li><li>Lemon</li></ul>
+          <dl class="menu-facts">
+            <div><dt>Price</dt><dd class="menu-price">£4.20</dd></div>
+            <div><dt>Bean</dt><dd>Yirgacheffe</dd></div>
+          </dl>
+          <div class="menu-actions">
+            <button class="add-btn" type="button" aria-label="Add V60 pour-over to your order"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add</button>
+          </div>
+        </li>
+        <li class="menu-item" data-category="slow" data-id="batch-brew" data-name="Batch brew" data-price="280">
+          <div class="menu-top">
+            <span class="menu-art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h14l-5 7h-4z"/><path d="M12 12v3"/><path d="M7 16h10v3.5H7z"/></svg></span>
+            <div>
+              <p class="menu-origin">Slow bar</p>
+              <h2>Batch brew</h2>
+            </div>
+          </div>
+          <p class="menu-desc">Filter coffee, brewed fresh every thirty minutes.</p>
+          <ul class="menu-notes" aria-label="Notes"><li>Caramel</li><li>Red apple</li></ul>
+          <dl class="menu-facts">
+            <div><dt>Price</dt><dd class="menu-price">£2.80</dd></div>
+            <div><dt>Bean</dt><dd>Huila</dd></div>
+          </dl>
+          <div class="menu-actions">
+            <button class="add-btn" type="button" aria-label="Add Batch brew to your order"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add</button>
+          </div>
+        </li>
+        <li class="menu-item" data-category="slow" data-id="cold-brew" data-name="Cold brew" data-price="380">
+          <div class="menu-top">
+            <span class="menu-art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h14l-5 7h-4z"/><path d="M12 12v3"/><path d="M7 16h10v3.5H7z"/></svg></span>
+            <div>
+              <p class="menu-origin">Slow bar</p>
+              <h2>Cold brew</h2>
+            </div>
+          </div>
+          <p class="menu-desc">Steeped for eighteen hours and served over ice.</p>
+          <ul class="menu-notes" aria-label="Notes"><li>Blackcurrant</li><li>Grapefruit</li></ul>
+          <dl class="menu-facts">
+            <div><dt>Price</dt><dd class="menu-price">£3.80</dd></div>
+            <div><dt>Bean</dt><dd>Nyeri</dd></div>
+          </dl>
+          <div class="menu-actions">
+            <button class="add-btn" type="button" aria-label="Add Cold brew to your order"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add</button>
+          </div>
+        </li>
+        <li class="menu-item" data-category="slow" data-id="espresso-tonic" data-name="Espresso tonic" data-price="400">
+          <div class="menu-top">
+            <span class="menu-art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h14l-5 7h-4z"/><path d="M12 12v3"/><path d="M7 16h10v3.5H7z"/></svg></span>
+            <div>
+              <p class="menu-origin">Slow bar</p>
+              <h2>Espresso tonic</h2>
+            </div>
+          </div>
+          <p class="menu-desc">A double shot over tonic, ice and a twist of orange.</p>
+          <ul class="menu-notes" aria-label="Notes"><li>Seasonal</li><li>Blackcurrant</li><li>Grapefruit</li></ul>
+          <dl class="menu-facts">
+            <div><dt>Price</dt><dd class="menu-price">£4.00</dd></div>
+            <div><dt>Bean</dt><dd>Nyeri</dd></div>
+          </dl>
+          <div class="menu-actions">
+            <button class="add-btn" type="button" aria-label="Add Espresso tonic to your order"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add</button>
+          </div>
+        </li>
+
+        <li class="menu-item" data-category="bakes" data-id="croissant" data-name="Butter croissant" data-price="290">
+          <div class="menu-top">
+            <span class="menu-art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 15c3-6.5 13-6.5 16 0-2.5 2-5.5 3-8 3s-5.5-1-8-3z"/><path d="M8.5 13.6 7 10.2M12 12.9V9.2M15.5 13.6 17 10.2"/></svg></span>
+            <div>
+              <p class="menu-origin">Baked today</p>
+              <h2>Butter croissant</h2>
+            </div>
+          </div>
+          <p class="menu-desc">Laminated in-house every morning and baked through the day.</p>
+          <ul class="menu-notes" aria-label="Notes"><li>Buttery</li><li>Flaky</li></ul>
+          <dl class="menu-facts">
+            <div><dt>Price</dt><dd class="menu-price">£2.90</dd></div>
+            <div><dt>Pairs with</dt><dd>Flat white</dd></div>
+          </dl>
+          <div class="menu-actions">
+            <button class="add-btn" type="button" aria-label="Add Butter croissant to your order"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add</button>
+          </div>
+        </li>
+        <li class="menu-item" data-category="bakes" data-id="cardamom-bun" data-name="Cardamom bun" data-price="340">
+          <div class="menu-top">
+            <span class="menu-art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 15c3-6.5 13-6.5 16 0-2.5 2-5.5 3-8 3s-5.5-1-8-3z"/><path d="M8.5 13.6 7 10.2M12 12.9V9.2M15.5 13.6 17 10.2"/></svg></span>
+            <div>
+              <p class="menu-origin">Baked today</p>
+              <h2>Cardamom bun</h2>
+            </div>
+          </div>
+          <p class="menu-desc">Soft, knotted and rolled in cardamom sugar.</p>
+          <ul class="menu-notes" aria-label="Notes"><li>Spiced</li><li>Sweet</li></ul>
+          <dl class="menu-facts">
+            <div><dt>Price</dt><dd class="menu-price">£3.40</dd></div>
+            <div><dt>Pairs with</dt><dd>Espresso</dd></div>
+          </dl>
+          <div class="menu-actions">
+            <button class="add-btn" type="button" aria-label="Add Cardamom bun to your order"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add</button>
+          </div>
+        </li>
+        <li class="menu-item" data-category="bakes" data-id="banana-bread" data-name="Banana bread" data-price="310">
+          <div class="menu-top">
+            <span class="menu-art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 15c3-6.5 13-6.5 16 0-2.5 2-5.5 3-8 3s-5.5-1-8-3z"/><path d="M8.5 13.6 7 10.2M12 12.9V9.2M15.5 13.6 17 10.2"/></svg></span>
+            <div>
+              <p class="menu-origin">Baked today</p>
+              <h2>Banana bread</h2>
+            </div>
+          </div>
+          <p class="menu-desc">A thick slice, toasted, with a little salted butter on the side.</p>
+          <ul class="menu-notes" aria-label="Notes"><li>Vegan</li><li>Toasted</li></ul>
+          <dl class="menu-facts">
+            <div><dt>Price</dt><dd class="menu-price">£3.10</dd></div>
+            <div><dt>Pairs with</dt><dd>Batch brew</dd></div>
+          </dl>
+          <div class="menu-actions">
+            <button class="add-btn" type="button" aria-label="Add Banana bread to your order"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add</button>
+          </div>
+        </li>
+        <li class="menu-item" data-category="bakes" data-id="financier" data-name="Almond financier" data-price="260">
+          <div class="menu-top">
+            <span class="menu-art" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 15c3-6.5 13-6.5 16 0-2.5 2-5.5 3-8 3s-5.5-1-8-3z"/><path d="M8.5 13.6 7 10.2M12 12.9V9.2M15.5 13.6 17 10.2"/></svg></span>
+            <div>
+              <p class="menu-origin">Baked today</p>
+              <h2>Almond financier</h2>
+            </div>
+          </div>
+          <p class="menu-desc">Brown-butter almond cake with a crisp edge.</p>
+          <ul class="menu-notes" aria-label="Notes"><li>Nutty</li><li>Crisp edge</li></ul>
+          <dl class="menu-facts">
+            <div><dt>Price</dt><dd class="menu-price">£2.60</dd></div>
+            <div><dt>Pairs with</dt><dd>Cortado</dd></div>
+          </dl>
+          <div class="menu-actions">
+            <button class="add-btn" type="button" aria-label="Add Almond financier to your order"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add</button>
+          </div>
+        </li>
+      </ul>
+      <p class="menu-note" data-reveal>Whole, oat and almond milk at no extra charge. Prices are the same at every bar.</p>
+    </div>
+  </section>
+
+  <section class="section section-dark" aria-labelledby="howTitle">
+    <div class="section-inner" data-reveal-group>
+      <div class="section-head">
+        <div data-reveal>
+          <p class="eyebrow">How ordering works</p>
+          <h2 class="section-title" id="howTitle">Four taps, <em>no queue.</em></h2>
+        </div>
+      </div>
+
+      <ol class="journey" data-reveal>
+        <li><h3>Add what you like</h3><p>Tap Add on any drink or bake. Milk drinks let you choose whole, oat or almond first.</p></li>
+        <li><h3>Check your order</h3><p>Open Your order to change quantities or take anything out.</p></li>
+        <li><h3>Pick a bar and a time</h3><p>Choose where to collect it, and whether you want it now or in 15 or 30 minutes.</p></li>
+        <li><h3>Collect at the bar</h3><p>We start the shot so it is fresh when you arrive, and call your name at the bar.</p></li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <a class="nav-brand" href="index.html" aria-label="Crema home">Crema<span class="nav-dot" aria-hidden="true"></span></a>
+    <ul class="socials" aria-label="Crema on social media">
+      <li><a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="3.8"/><circle cx="17.2" cy="6.8" r="1.1" class="fill"/></svg></a></li>
+      <li><a href="#" aria-label="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 3.5v11a3.5 3.5 0 1 1-3.5-3.5"/><path d="M13.5 3.5c.5 2.7 2.4 4.6 5 4.9"/></svg></a></li>
+      <li><a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M13.6 21v-7.6h2.6l.4-3h-3V8.5c0-.9.3-1.5 1.5-1.5h1.6V4.3c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.9v3h2.6V21h3.1z"/></svg></a></li>
+      <li><a href="#" aria-label="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 4h4l11 16h-4z"/><path d="M19.5 4l-6.4 7M10.9 13 4.5 20"/></svg></a></li>
+    </ul>
+  </div>
+  <div class="footer-bottom">
+    <p>© <span data-year>2026</span> Crema Coffee. All rights reserved.</p>
+  </div>
+</footer>
+</div>
+
+<!-- Ordering: floating order button + cart drawer (demo only, nothing is sent) -->
+<button class="cart-fab" id="cartOpen" type="button" aria-controls="cart" aria-expanded="false">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a1.5 1.5 0 0 1-1.5 1.3H7.7a1.5 1.5 0 0 1-1.5-1.3z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span>Your order</span><span class="cart-count" id="cartCount">0</span>
+</button>
+<p class="visually-hidden" id="cartStatus" role="status" aria-live="polite"></p>
+<div class="cart-scrim" id="cartScrim" hidden></div>
+<aside class="cart" id="cart" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
+  <div class="cart-head">
+    <h2 id="cartTitle">Your order</h2>
+    <button class="icon-btn" id="cartClose" type="button" aria-label="Close your order"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+
+  <div class="cart-view" id="cartView">
+    <div class="cart-body">
+      <ul class="cart-lines" id="cartLines"></ul>
+      <p class="cart-empty" id="cartEmpty">Nothing here yet. Tap Add on a drink or a bake to start your order.</p>
+    </div>
+
+    <form class="cart-form" id="cartForm" novalidate>
+      <div class="field">
+        <label class="field-label" for="orderName">Name for the order</label>
+        <input class="input" id="orderName" name="name" autocomplete="given-name" placeholder="So the barista can call you">
+      </div>
+      <div class="field">
+        <label class="field-label" for="orderBar">Pick up at</label>
+        <span class="select"><select id="orderBar" name="bar"><option>Soho</option><option>Shoreditch</option><option>King's Cross</option><option>Borough</option><option>Peckham</option><option>Notting Hill</option></select></span>
+      </div>
+      <fieldset class="cart-when-field">
+        <legend class="field-label">When</legend>
+        <div class="cart-when">
+          <label><input type="radio" name="when" value="5" checked><span>ASAP</span></label>
+          <label><input type="radio" name="when" value="15"><span>In 15 min</span></label>
+          <label><input type="radio" name="when" value="30"><span>In 30 min</span></label>
+        </div>
+      </fieldset>
+      <div class="cart-total"><span>Total</span><strong id="cartTotal">£0.00</strong></div>
+      <p class="cart-error" id="cartError" role="alert"></p>
+      <button class="btn btn-primary" type="submit">Place order</button>
+      <p class="cart-note">Demo only: no payment is taken and the order is not sent anywhere.</p>
+    </form>
+  </div>
+
+  <div class="cart-done" id="cartDone" tabindex="-1" hidden>
+    <div class="done-mark" aria-hidden="true"></div>
+    <h3>Order placed</h3>
+    <p class="done-number" id="doneNumber"></p>
+    <dl class="done-facts">
+      <div><dt>Name</dt><dd id="doneName"></dd></div>
+      <div><dt>Pick up at</dt><dd id="doneBar"></dd></div>
+      <div><dt>Ready around</dt><dd id="doneTime"></dd></div>
+      <div><dt>Total</dt><dd id="doneTotal"></dd></div>
+    </dl>
+    <ul class="done-items" id="doneItems"></ul>
+    <button class="btn btn-primary" id="newOrder" type="button">Start a new order</button>
+    <p class="cart-note">Demo only: this order was not sent anywhere.</p>
+  </div>
+</aside>
+
+<script src="script.js"></script>
+</body>
+</html>
