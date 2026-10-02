@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rewards — Crema</title>
+<meta name="description" content="Collect a stamp with every drink you order in the Crema app. Every ninth cup is on us.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script>
+// Runs before first paint: apply saved settings (theme, text size, motion, video)
+// so the page never flashes the wrong theme.
+try {
+  const s = JSON.parse(localStorage.getItem("crema-settings") || "{}");
+  const r = document.documentElement;
+  if (s.theme === "light") r.dataset.theme = "light";
+  if (s.textSize === "large") r.classList.add("text-large");
+  if (s.reduceMotion) r.classList.add("reduce-motion");
+  if (s.video === false) r.classList.add("no-video");
+} catch (e) { /* private mode or a corrupt value: keep the defaults */ }
+// A page transition is skipped when the tab is hidden or the window resizes mid-navigation.
+// That is expected, so claim its promises on both the outgoing page (pageswap) and the
+// incoming one (pagereveal, before first render) so it is never an uncaught error.
+const claimTransition = (e) => {
+  const t = e.viewTransition;
+  if (t) [t.ready, t.finished, t.updateCallbackDone].forEach((p) => p && p.catch(() => {}));
+};
+addEventListener("pageswap", claimTransition);
+addEventListener("pagereveal", claimTransition);
+</script>
+</head>
+<body class="subpage">
+
+<aside class="sidebar" id="sidebar" aria-label="Site navigation">
+  <div class="sidebar-head">
+    <a class="nav-brand" href="index.html" aria-label="Crema home">Crema<span class="nav-dot" aria-hidden="true"></span></a>
+    <button class="icon-btn sidebar-close" id="sidebarClose" type="button" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <nav aria-label="Primary">
+    <ul class="side-links">
+      <li><a href="index.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5"/><path d="M6.5 10v9h11v-9"/></svg>Home</a></li>
+      <li><a href="menu.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h11v4.5a5.5 5.5 0 0 1-11 0z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8.5 3.5v2M12 3.5v2"/></svg>Menu</a></li>
+      <li><a href="beans.html"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="6" ry="8.5" transform="rotate(35 12 12)"/><path d="M8.2 16.6c2.6-1.6.6-5 3.6-7s2-3.4 4-4.4"/></svg>Beans</a></li>
+      <li><a href="rewards.html" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 4 2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z"/></svg>Rewards</a></li>
+      <li><a href="locations.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>Locations</a></li>
+    </ul>
+  </nav>
+  <div class="sidebar-foot">
+    <button class="side-settings" id="settingsToggle" type="button" aria-expanded="false" aria-controls="settingsPanel">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 3.6v2.2M12 18.2v2.2M20.4 12h-2.2M5.8 12H3.6M17.9 6.1l-1.6 1.6M7.7 16.3l-1.6 1.6M17.9 17.9l-1.6-1.6M7.7 7.7 6.1 6.1"/></svg>Settings
+    </button>
+    <a class="btn btn-primary" href="index.html">Get the app</a>
+  </div>
+</aside>
+<div class="sidebar-scrim" id="sidebarScrim" hidden></div>
+<div class="settings-panel" id="settingsPanel" role="dialog" aria-labelledby="settingsTitle" hidden>
+  <div class="settings-head">
+    <h2 id="settingsTitle">Settings</h2>
+    <button class="icon-btn" id="settingsClose" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <ul class="settings-list">
+    <li>
+      <div>
+        <p class="settings-name">Theme</p>
+        <p class="settings-hint">Dark espresso or light cream.</p>
+      </div>
+      <div class="seg" id="setTheme" role="group" aria-label="Theme">
+        <button type="button" data-theme-choice="dark" aria-pressed="true">Dark</button>
+        <button type="button" data-theme-choice="light" aria-pressed="false">Light</button>
+      </div>
+    </li>
+    <li>
+      <div>
+        <p class="settings-name">Background video</p>
+        <p class="settings-hint">Play the espresso film behind the home page.</p>
+      </div>
+      <button class="switch" id="setVideo" type="button" role="switch" aria-checked="true" aria-label="Background video"><span aria-hidden="true"></span></button>
+    </li>
+    <li>
+      <div>
+        <p class="settings-name">Reduce motion</p>
+        <p class="settings-hint">Turn off fades, page transitions and hover movement.</p>
+      </div>
+      <button class="switch" id="setMotion" type="button" role="switch" aria-checked="false" aria-label="Reduce motion"><span aria-hidden="true"></span></button>
+    </li>
+    <li>
+      <div>
+        <p class="settings-name">Text size</p>
+        <p class="settings-hint">Make everything a step larger.</p>
+      </div>
+      <div class="seg" id="setText" role="group" aria-label="Text size">
+        <button type="button" data-size="normal" aria-pressed="true">Normal</button>
+        <button type="button" data-size="large" aria-pressed="false">Large</button>
+      </div>
+    </li>
+  </ul>
+  <p class="settings-note">Saved on this device only.</p>
+</div>
+
+<div class="page">
+  <header class="topbar" id="topbar">
+    <a class="nav-brand topbar-brand" href="index.html" aria-label="Crema home">Crema<span class="nav-dot" aria-hidden="true"></span></a>
+    <ul class="top-links" aria-label="Pages">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="menu.html">Menu</a></li>
+      <li><a href="beans.html">Beans</a></li>
+      <li><a href="rewards.html" aria-current="page"><span class="top-indicator" aria-hidden="true"></span>Rewards</a></li>
+      <li><a href="locations.html">Locations</a></li>
+    </ul>
+    <a class="btn btn-outline topbar-cta" href="index.html">Get the app</a>
+    <button class="icon-btn menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="sidebar" aria-label="Open menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+    </button>
+  </header>
+
+<main>
+  <section class="section section-dark" aria-labelledby="rewardsTitle">
+    <div class="section-inner rewards-grid" data-reveal-group>
+      <div data-reveal>
+        <p class="eyebrow">Rewards</p>
+        <h1 class="section-title" id="rewardsTitle">Every ninth cup is <em>on us.</em></h1>
+        <p class="section-lede">Pay in the app and a stamp lands on your card automatically. No paper cards, and no forgetting your wallet.</p>
+        <ol class="steps">
+          <li><div><strong>Order in the app</strong><span>Any drink, at any of our bars.</span></div></li>
+          <li><div><strong>Collect a stamp per drink</strong><span>Stamps never expire and work across every location.</span></div></li>
+          <li><div><strong>Your ninth cup is free</strong><span>It's added to your next order automatically.</span></div></li>
+        </ol>
+        <ul class="perks" aria-label="Member perks">
+          <li>Birthday drink on the house</li>
+          <li>First taste of seasonal roasts</li>
+          <li>Priority pickup at busy bars</li>
+        </ul>
+      </div>
+
+      <div class="stamp-card" id="stampCard" data-reveal>
+        <div class="stamp-head">
+          <p class="stamp-title">Your card</p>
+          <p class="stamp-count"><span id="stampCount">3</span> of 9</p>
+        </div>
+        <ol class="stamps" id="stamps" aria-label="Stamp card">
+          <li class="stamp is-filled"><span class="visually-hidden">Stamp 1</span></li>
+          <li class="stamp is-filled"><span class="visually-hidden">Stamp 2</span></li>
+          <li class="stamp is-filled"><span class="visually-hidden">Stamp 3</span></li>
+          <li class="stamp"><span class="visually-hidden">Stamp 4</span></li>
+          <li class="stamp"><span class="visually-hidden">Stamp 5</span></li>
+          <li class="stamp"><span class="visually-hidden">Stamp 6</span></li>
+          <li class="stamp"><span class="visually-hidden">Stamp 7</span></li>
+          <li class="stamp"><span class="visually-hidden">Stamp 8</span></li>
+          <li class="stamp stamp-free">Free</li>
+        </ol>
+        <p class="stamp-status" id="stampStatus" aria-live="polite">5 more to your free cup.</p>
+        <button class="btn btn-primary" id="stampButton" type="button">Add a stamp</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <a class="nav-brand" href="index.html" aria-label="Crema home">Crema<span class="nav-dot" aria-hidden="true"></span></a>
+    <ul class="socials" aria-label="Crema on social media">
+      <li><a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="3.8"/><circle cx="17.2" cy="6.8" r="1.1" class="fill"/></svg></a></li>
+      <li><a href="#" aria-label="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 3.5v11a3.5 3.5 0 1 1-3.5-3.5"/><path d="M13.5 3.5c.5 2.7 2.4 4.6 5 4.9"/></svg></a></li>
+      <li><a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M13.6 21v-7.6h2.6l.4-3h-3V8.5c0-.9.3-1.5 1.5-1.5h1.6V4.3c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.9v3h2.6V21h3.1z"/></svg></a></li>
+      <li><a href="#" aria-label="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 4h4l11 16h-4z"/><path d="M19.5 4l-6.4 7M10.9 13 4.5 20"/></svg></a></li>
+    </ul>
+  </div>
+  <div class="footer-bottom">
+    <p>© <span data-year>2026</span> Crema Coffee. All rights reserved.</p>
+  </div>
+</footer>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

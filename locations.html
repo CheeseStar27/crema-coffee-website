@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Locations — Crema</title>
+<meta name="description" content="Find a Crema bar near you, with opening hours and live open status.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script>
+// Runs before first paint: apply saved settings (theme, text size, motion, video)
+// so the page never flashes the wrong theme.
+try {
+  const s = JSON.parse(localStorage.getItem("crema-settings") || "{}");
+  const r = document.documentElement;
+  if (s.theme === "light") r.dataset.theme = "light";
+  if (s.textSize === "large") r.classList.add("text-large");
+  if (s.reduceMotion) r.classList.add("reduce-motion");
+  if (s.video === false) r.classList.add("no-video");
+} catch (e) { /* private mode or a corrupt value: keep the defaults */ }
+// A page transition is skipped when the tab is hidden or the window resizes mid-navigation.
+// That is expected, so claim its promises on both the outgoing page (pageswap) and the
+// incoming one (pagereveal, before first render) so it is never an uncaught error.
+const claimTransition = (e) => {
+  const t = e.viewTransition;
+  if (t) [t.ready, t.finished, t.updateCallbackDone].forEach((p) => p && p.catch(() => {}));
+};
+addEventListener("pageswap", claimTransition);
+addEventListener("pagereveal", claimTransition);
+</script>
+</head>
+<body class="subpage">
+
+<aside class="sidebar" id="sidebar" aria-label="Site navigation">
+  <div class="sidebar-head">
+    <a class="nav-brand" href="index.html" aria-label="Crema home">Crema<span class="nav-dot" aria-hidden="true"></span></a>
+    <button class="icon-btn sidebar-close" id="sidebarClose" type="button" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <nav aria-label="Primary">
+    <ul class="side-links">
+      <li><a href="index.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5"/><path d="M6.5 10v9h11v-9"/></svg>Home</a></li>
+      <li><a href="menu.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h11v4.5a5.5 5.5 0 0 1-11 0z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8.5 3.5v2M12 3.5v2"/></svg>Menu</a></li>
+      <li><a href="beans.html"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="6" ry="8.5" transform="rotate(35 12 12)"/><path d="M8.2 16.6c2.6-1.6.6-5 3.6-7s2-3.4 4-4.4"/></svg>Beans</a></li>
+      <li><a href="rewards.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 4 2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z"/></svg>Rewards</a></li>
+      <li><a href="locations.html" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>Locations</a></li>
+    </ul>
+  </nav>
+  <div class="sidebar-foot">
+    <button class="side-settings" id="settingsToggle" type="button" aria-expanded="false" aria-controls="settingsPanel">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 3.6v2.2M12 18.2v2.2M20.4 12h-2.2M5.8 12H3.6M17.9 6.1l-1.6 1.6M7.7 16.3l-1.6 1.6M17.9 17.9l-1.6-1.6M7.7 7.7 6.1 6.1"/></svg>Settings
+    </button>
+    <a class="btn btn-primary" href="index.html">Get the app</a>
+  </div>
+</aside>
+<div class="sidebar-scrim" id="sidebarScrim" hidden></div>
+<div class="settings-panel" id="settingsPanel" role="dialog" aria-labelledby="settingsTitle" hidden>
+  <div class="settings-head">
+    <h2 id="settingsTitle">Settings</h2>
+    <button class="icon-btn" id="settingsClose" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <ul class="settings-list">
+    <li>
+      <div>
+        <p class="settings-name">Theme</p>
+        <p class="settings-hint">Dark espresso or light cream.</p>
+      </div>
+      <div class="seg" id="setTheme" role="group" aria-label="Theme">
+        <button type="button" data-theme-choice="dark" aria-pressed="true">Dark</button>
+        <button type="button" data-theme-choice="light" aria-pressed="false">Light</button>
+      </div>
+    </li>
+    <li>
+      <div>
+        <p class="settings-name">Background video</p>
+        <p class="settings-hint">Play the espresso film behind the home page.</p>
+      </div>
+      <button class="switch" id="setVideo" type="button" role="switch" aria-checked="true" aria-label="Background video"><span aria-hidden="true"></span></button>
+    </li>
+    <li>
+      <div>
+        <p class="settings-name">Reduce motion</p>
+        <p class="settings-hint">Turn off fades, page transitions and hover movement.</p>
+      </div>
+      <button class="switch" id="setMotion" type="button" role="switch" aria-checked="false" aria-label="Reduce motion"><span aria-hidden="true"></span></button>
+    </li>
+    <li>
+      <div>
+        <p class="settings-name">Text size</p>
+        <p class="settings-hint">Make everything a step larger.</p>
+      </div>
+      <div class="seg" id="setText" role="group" aria-label="Text size">
+        <button type="button" data-size="normal" aria-pressed="true">Normal</button>
+        <button type="button" data-size="large" aria-pressed="false">Large</button>
+      </div>
+    </li>
+  </ul>
+  <p class="settings-note">Saved on this device only.</p>
+</div>
+
+<div class="page">
+  <header class="topbar" id="topbar">
+    <a class="nav-brand topbar-brand" href="index.html" aria-label="Crema home">Crema<span class="nav-dot" aria-hidden="true"></span></a>
+    <ul class="top-links" aria-label="Pages">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="menu.html">Menu</a></li>
+      <li><a href="beans.html">Beans</a></li>
+      <li><a href="rewards.html">Rewards</a></li>
+      <li><a href="locations.html" aria-current="page"><span class="top-indicator" aria-hidden="true"></span>Locations</a></li>
+    </ul>
+    <a class="btn btn-outline topbar-cta" href="index.html">Get the app</a>
+    <button class="icon-btn menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="sidebar" aria-label="Open menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+    </button>
+  </header>
+
+<main>
+  <section class="section section-light" aria-labelledby="locationsTitle">
+    <div class="section-inner" data-reveal-group>
+      <div class="section-head">
+        <div data-reveal>
+          <p class="eyebrow">Locations</p>
+          <h1 class="section-title" id="locationsTitle">Twelve bars, <em>one</em> app.</h1>
+          <p class="section-lede">Order from any of them. Opening hours are London time, and pickup estimates update live in the app.</p>
+        </div>
+        <div class="tabs" data-reveal>
+          <button class="tab" type="button" aria-pressed="false" id="openNowFilter">Open now</button>
+        </div>
+      </div>
+
+      <ul class="loc-grid" id="locList" data-reveal>
+        <!-- data-hours: [open, close] per day, Sunday first, 24h decimal; null = closed -->
+        <li class="loc-card" data-hours="[[8,18],[7,19],[7,19],[7,19],[7,19],[7,19],[8,18]]">
+          <div class="loc-head"><h2>Soho</h2><span class="loc-status">Hours</span></div>
+          <p class="loc-addr">41 Greek Street, W1D 4EH</p>
+          <p class="loc-hours">Mon–Fri 7:00–19:00 · Sat–Sun 8:00–18:00</p>
+        </li>
+        <li class="loc-card" data-hours="[[7,18],[7,18],[7,18],[7,18],[7,18],[7,18],[7,18]]">
+          <div class="loc-head"><h2>Shoreditch</h2><span class="loc-status">Hours</span></div>
+          <p class="loc-addr">12 Redchurch Street, E2 7DJ</p>
+          <p class="loc-hours">Every day 7:00–18:00</p>
+        </li>
+        <li class="loc-card" data-hours="[[8,18],[6.5,20],[6.5,20],[6.5,20],[6.5,20],[6.5,20],[8,18]]">
+          <div class="loc-head"><h2>King's Cross</h2><span class="loc-status">Hours</span></div>
+          <p class="loc-addr">3 Granary Square, N1C 4AA</p>
+          <p class="loc-hours">Mon–Fri 6:30–20:00 · Sat–Sun 8:00–18:00</p>
+        </li>
+        <li class="loc-card" data-hours="[null,[7.5,17.5],[7.5,17.5],[7.5,17.5],[7.5,17.5],[7.5,17.5],[7.5,17.5]]">
+          <div class="loc-head"><h2>Borough</h2><span class="loc-status">Hours</span></div>
+          <p class="loc-addr">8 Stoney Street, SE1 9AA</p>
+          <p class="loc-hours">Mon–Sat 7:30–17:30 · Sun closed</p>
+        </li>
+        <li class="loc-card" data-hours="[[8,17],[8,17],[8,17],[8,17],[8,17],[8,17],[8,17]]">
+          <div class="loc-head"><h2>Peckham</h2><span class="loc-status">Hours</span></div>
+          <p class="loc-addr">133 Rye Lane, SE15 4ST</p>
+          <p class="loc-hours">Every day 8:00–17:00</p>
+        </li>
+        <li class="loc-card" data-hours="[[8,19],[7,18],[7,18],[7,18],[7,18],[7,18],[8,19]]">
+          <div class="loc-head"><h2>Notting Hill</h2><span class="loc-status">Hours</span></div>
+          <p class="loc-addr">22 Portobello Road, W11 3DH</p>
+          <p class="loc-hours">Mon–Fri 7:00–18:00 · Sat–Sun 8:00–19:00</p>
+        </li>
+      </ul>
+      <p class="loc-empty" id="locEmpty" hidden>None of these bars are open right now. The earliest opens at 6:30.</p>
+
+      <div class="loc-foot" data-reveal>
+        <p>Showing 6 of our 12 bars. Find the rest, with live pickup times, in the app.</p>
+        <a class="btn btn-dark" href="index.html">Get the app</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <a class="nav-brand" href="index.html" aria-label="Crema home">Crema<span class="nav-dot" aria-hidden="true"></span></a>
+    <ul class="socials" aria-label="Crema on social media">
+      <li><a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="3.8"/><circle cx="17.2" cy="6.8" r="1.1" class="fill"/></svg></a></li>
+      <li><a href="#" aria-label="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 3.5v11a3.5 3.5 0 1 1-3.5-3.5"/><path d="M13.5 3.5c.5 2.7 2.4 4.6 5 4.9"/></svg></a></li>
+      <li><a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M13.6 21v-7.6h2.6l.4-3h-3V8.5c0-.9.3-1.5 1.5-1.5h1.6V4.3c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.9v3h2.6V21h3.1z"/></svg></a></li>
+      <li><a href="#" aria-label="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 4h4l11 16h-4z"/><path d="M19.5 4l-6.4 7M10.9 13 4.5 20"/></svg></a></li>
+    </ul>
+  </div>
+  <div class="footer-bottom">
+    <p>© <span data-year>2026</span> Crema Coffee. All rights reserved.</p>
+  </div>
+</footer>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
